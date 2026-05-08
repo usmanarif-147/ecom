@@ -1,0 +1,5 @@
+ecom/vendor
+ecom/node_modules
+ecom/.git
+ecom/storage/logs
+ecom/.env
