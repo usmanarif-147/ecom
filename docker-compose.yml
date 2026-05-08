@@ -24,6 +24,17 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
 
+  # nuxt js
+  node:
+    image: node:lts
+    user: "1000:1000"
+    working_dir: /app
+    volumes:
+      - ./ecom/frontend:/app
+    environment:
+      HOME: /tmp
+    profiles: [ "tools" ]
+
   # Nginx Web Server
   webserver:
     image: nginx:alpine
