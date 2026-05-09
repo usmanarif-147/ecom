@@ -8,6 +8,7 @@ Route::get('/', [HomeController::class, 'test']);
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::redirect('/', '/admin/dashboard');
+    Route::get('/login', Admin\Login::class)->name('login');
     Route::get('/dashboard', Admin\Dashboard::class)->name('dashboard');
     Route::get('/products', Admin\ProductIndex::class)->name('products.index');
     Route::get('/products/create', Admin\ProductForm::class)->name('products.create');
