@@ -3,12 +3,12 @@
 namespace App\Livewire\Admin;
 
 use App\Data\AdminStaticData;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
+// use Livewire\Attributes\Layout;
+// use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.admin')]
-#[Title('Dashboard · Admin')]
+// #[Layout('components.layouts.admin')]
+// #[Title('Dashboard · Admin')]
 class Dashboard extends Component
 {
     public function render()
