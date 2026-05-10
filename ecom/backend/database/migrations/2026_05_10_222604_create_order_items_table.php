@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders');
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
             $table->json('product');
             $table->integer('quantity')->default(0);
-            $table->float('total_amount')->default(0.0);
+            $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
     }

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade')->onUpdate('cascade');
             $table->string('title');
             $table->mediumText('description')->nullable();
-            $table->float('price')->default(0.0);
-            $table->float('cost')->default(0.0);
+            $table->decimal('price', 10, 2)->default(0);
+            $table->decimal('cost', 10, 2)->default(0);
             $table->integer('stock')->default(0);
             $table->integer('views')->default(0);
             $table->tinyInteger('status')->comment('0 => inactive/archived, 1 => active');
