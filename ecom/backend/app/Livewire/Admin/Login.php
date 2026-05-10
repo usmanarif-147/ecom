@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -16,8 +17,11 @@ class Login extends Component
 
     public function submit()
     {
-        // Static UI only — no real auth.
-        return redirect()->route('admin.dashboard');
+        if (Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('admin.login');
     }
 
     public function render()

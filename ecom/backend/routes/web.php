@@ -1,9 +1,7 @@
 <?php
 
-use App\Http\Controllers\HomeController;
-use App\Livewire\Admin;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [HomeController::class, 'test']);
+Route::get('/', fn () => dd('commint soon'));
 
 require __DIR__ . '/admin.php';
