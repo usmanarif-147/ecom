@@ -10,7 +10,8 @@
         </button>
 
         <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">
+            <div
+                class="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">
                 A
             </div>
             <div class="hidden sm:block leading-tight">
@@ -19,12 +20,6 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.logout') }}" method="POST">
-            @csrf
-            <button type="submit"
-                class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50">
-                Logout
-            </button>
-        </form>
+        @livewire('admin.logout')
     </div>
 </header>
