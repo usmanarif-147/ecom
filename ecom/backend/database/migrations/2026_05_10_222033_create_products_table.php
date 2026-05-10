@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade')->onUpdate('cascade');
             $table->string('title');
-            $table->mediumText('description');
-            $table->float('price');
-            $table->float('cost');
-            $table->integer('stock');
-            $table->integer('views');
+            $table->mediumText('description')->nullable();
+            $table->float('price')->default(0.0);
+            $table->float('cost')->default(0.0);
+            $table->integer('stock')->default(0);
+            $table->integer('views')->default(0);
+            $table->tinyInteger('status')->comment('0 => inactive/archived, 1 => active');
             $table->timestamps();
         });
     }

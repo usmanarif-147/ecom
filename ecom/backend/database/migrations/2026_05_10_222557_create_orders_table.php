@@ -17,9 +17,10 @@ return new class extends Migration
             $table->string('customer_name');
             $table->string('customer_email');
             $table->string('address');
-            $table->integer('number_of_items');
-            $table->float('total_amount');
-            $table->integer('status')->comment('0 => pending, 1 => shipped, 2 => delivered, 3 => canceled');
+            $table->integer('number_of_items')->default(0);
+            $table->float('total_amount')->default(0.0);
+            $table->float('total_cost')->default(0.0);
+            $table->tinyInteger('status')->comment('0 => pending, 1 => shipped, 2 => delivered, 3 => canceled');
             $table->timestamps();
         });
     }
