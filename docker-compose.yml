@@ -77,6 +77,34 @@ services:
     ports:
       - "6379:6379"
 
+  # File storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: dockerized-laravel-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # Web console                                                                                                                                                   
+    volumes:
+      - dockerized-laravel-minio:/data
+    networks:
+      - dockerized-laravel-network
+
+  # SMTP catch-all for dev emails                                                                                                                                                     
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: dockerized-laravel-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP                                                                                                                                                          
+      - "8025:8025" # Web UI
+    networks:
+      - dockerized-laravel-network
+
 # Networks
 networks:
   dockerized-laravel-network:
@@ -85,4 +113,6 @@ networks:
 # Volumes
 volumes:
   dockerized-laravel-data:
+    driver: local
+  dockerized-laravel-minio:
     driver: local
