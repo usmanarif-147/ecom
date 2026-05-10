@@ -12,6 +12,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::view('/products', 'admin.products.index')->name('products.index');
         Route::view('/products/create', 'admin.products.create')->name('products.create');
         Route::view('/products/{id}/edit', 'admin.products.edit')->name('products.edit');
-        Route::post('/logout', fn() => redirect()->route('admin.dashboard'))->name('logout');
     });
 });

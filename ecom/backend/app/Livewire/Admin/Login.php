@@ -3,12 +3,8 @@
 namespace App\Livewire\Admin;
 
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth')]
-#[Title('Sign in · Admin')]
 class Login extends Component
 {
     public string $email = '';
@@ -17,11 +13,16 @@ class Login extends Component
 
     public function submit()
     {
-        if (Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            return redirect()->route('admin.dashboard');
+        if (Auth::attempt(
+            ['email' => $this->email, 'password' => $this->password],
+            $this->remember
+        )) {
+            session()->regenerate();
+
+            return redirect()->intended(route('admin.dashboard'));
         }
 
-        return redirect()->route('admin.login');
+        $this->addError('email', 'Invalid email or password.');
     }
 
     public function render()
