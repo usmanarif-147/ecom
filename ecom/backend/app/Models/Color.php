@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable('title')]
+#[Fillable('title', 'code')]
 class Color extends Model
 {
     public function products(): BelongsToMany

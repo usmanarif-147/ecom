@@ -59,6 +59,7 @@ ecom/backend/
 │   │   ├── Logout.php                 # Used in topbar + sidebar (variant prop)
 │   │   ├── Dashboard.php              # Currently static, awaiting DB wiring
 │   │   ├── CategoryIndex.php          # DB-backed; list + inline create/edit/delete
+│   │   ├── ColorIndex.php             # DB-backed; list + inline create/edit/delete (title + hex code)
 │   │   ├── ProductIndex.php
 │   │   ├── ProductForm.php
 │   │   └── OrderIndex.php
