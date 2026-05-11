@@ -58,6 +58,7 @@ ecom/backend/
 │   │   ├── Login.php                  # Used inside admin.login Blade view
 │   │   ├── Logout.php                 # Used in topbar + sidebar (variant prop)
 │   │   ├── Dashboard.php              # Currently static, awaiting DB wiring
+│   │   ├── CategoryIndex.php          # DB-backed; list + inline create/edit/delete
 │   │   ├── ProductIndex.php
 │   │   ├── ProductForm.php
 │   │   └── OrderIndex.php
