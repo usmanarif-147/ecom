@@ -1,9 +1,9 @@
 ---
-description: Read relevant docs for a specific folder, route the task to the matching specialist, then update docs based on what changed
-argument-hint: <folder-path> <task description>
+description: Read relevant docs + rules, route to the right specialist, no command execution — the user reviews and runs the code
+argument-hint: <folder-path> [<task-type>] <task description>
 ---
 
-You are acting as the **team lead** for project-two. Follow this workflow precisely and do not skip phases.
+You are the **team lead** for project-two. Follow this workflow exactly.
 
 The user's raw input: $ARGUMENTS
 
@@ -11,25 +11,24 @@ The user's raw input: $ARGUMENTS
 
 ## Phase 0 — Parse the input
 
-The user input format is `<folder-path> <task description>`. Split it:
+Format: `<folder-path> [<task-type>] <task description>`
 
-- **`<folder-path>`** = the first whitespace-separated token.
-- **`<task description>`** = everything after that.
+- **`<folder-path>`** = first whitespace-separated token. Map it:
+  - `ecom/backend`, `backend`, `laravel` → specialist `laravel-livewire`
+  - `ecom/frontend/store-front`, `store-front`, `storefront`, `nuxt` → specialist `nuxt`
+  - `ecom/frontend/customer-panel`, `customer-panel`, `vue` → specialist `vue-vite`
+  - `tailwind`, `styling`, `design-system` → specialist `tailwind`
 
-Map the folder token to a specialist:
+- **`<task-type>`** = second token (REQUIRED for `ecom/backend`, OPTIONAL elsewhere). For backend, map it:
+  - `admin-panel`, `admin`, `livewire` → rules file `docs/backend/admin-panel-rules.md`
+  - `rest-api`, `rest-apis`, `api`, `apis` → rules file `docs/backend/rest-apis-rules.md`
 
-| Folder token (any of these) | Specialist subagent | Package README to read |
-|-----------------------------|---------------------|------------------------|
-| `ecom/backend`, `backend`, `laravel` | `laravel-livewire` | `ecom/backend/README.md` |
-| `ecom/frontend/store-front`, `store-front`, `storefront`, `nuxt` | `nuxt` | `ecom/frontend/store-front/README.md` |
-| `ecom/frontend/customer-panel`, `customer-panel`, `vue` | `vue-vite` | `ecom/frontend/customer-panel/README.md` |
-| `tailwind`, `styling`, `design-system` | `tailwind` | (read all three frontend READMEs if styling spans them) |
+- **`<task description>`** = the remainder.
 
 **Edge cases:**
-- If no folder token is provided (the first word doesn't look like a folder/agent name), use `AskUserQuestion` to ask which folder the task targets — do not guess.
-- If the folder token is given but doesn't match the table, use `AskUserQuestion` to clarify.
-
-The whole point of taking an explicit folder is to **avoid reading irrelevant READMEs and save tokens**. Don't read READMEs the table tells you to skip.
+- No folder token → use `AskUserQuestion` to clarify, don't guess.
+- Backend folder + no task-type → use `AskUserQuestion` to ask whether it's admin-panel or rest-api work.
+- Unrecognized folder or task-type → use `AskUserQuestion`.
 
 ---
 
@@ -38,76 +37,100 @@ The whole point of taking an explicit folder is to **avoid reading irrelevant RE
 Read **only**:
 
 1. `/home/usman/storage/projects/project-two/CLAUDE.md` — always.
-2. The single package README mapped above. Do **not** read root `README.md` and do **not** read the other two package READMEs unless the task explicitly spans them.
+2. The package README for the folder:
+   - `ecom/backend` → `ecom/backend/README.md`
+   - `ecom/frontend/store-front` → `ecom/frontend/store-front/README.md`
+   - `ecom/frontend/customer-panel` → `ecom/frontend/customer-panel/README.md`
+3. If folder is `ecom/backend`, also read:
+   - `docs/backend/working-pattern.md`
+   - **The rules file the task-type maps to** (`admin-panel-rules.md` or `rest-apis-rules.md`)
+   - `docs/backend/admin-panel.md` (only if task-type is admin-panel)
+   - `docs/backend/rest-apis.md` (only if task-type is rest-api)
 
-If the task description suggests the work crosses folder boundaries (e.g. "wire the storefront product list to a new backend API endpoint"), then also read the other affected README. But default to the minimum.
+Do **not** read other folder READMEs, the root `README.md`, or unrelated docs unless the task explicitly spans folders.
 
 ---
 
-## Phase 2 — Analyze and dispatch
+## Phase 2 — Dispatch the specialist
 
-Spawn the mapped specialist via the Agent tool. The prompt must include:
+Spawn the mapped specialist subagent via the Agent tool. The prompt MUST include:
 
-- The task description (the part after the folder token)
-- The exact folder boundary they should respect
-- A short reminder of relevant CLAUDE.md constraints for that folder (e.g. "money = decimal, Livewire = small components, edit existing migrations + migrate:fresh")
-- The instruction to report back: what they changed + which (if any) project-level facts should be reflected in docs
+- The original task description
+- The exact folder boundary (e.g. "edit only files inside `ecom/backend/`")
+- The **rules file path** they MUST read first (the one you identified in Phase 1)
+- Any relevant CLAUDE.md constraints
+- An explicit reminder: **DO NOT run docker / php / composer / npm / artisan / test commands. Implementation only. The user will review and run things themselves.**
+- Instruction to report back: files changed, packages added, conventions adopted, new routes — nothing more.
 
 Wait for the specialist to return.
 
 ---
 
-## Phase 3 — Specialist works
+## Phase 3 — Verify the specialist's work
 
-The specialist's report comes back as the Agent tool's result. **Trust but verify** — skim what they actually edited (e.g. `git status`) before treating their summary as truth.
+The specialist's report comes back as the Agent tool's result.
 
-If the specialist's work is incomplete, dispatch them again with a refined brief. Do **not** silently take over and finish their work yourself.
+Verify:
+- `git status` — see which files were actually edited/created (this is the only command you may run — it touches only the host, not Docker)
+- Skim the diff if anything looks off
+
+If the work is incomplete or off-target, dispatch the specialist again with a refined brief. Do **not** silently take over and finish the work yourself.
 
 ---
 
 ## Phase 4 — Update docs (minimal, targeted)
 
-Re-read CLAUDE.md and the affected package README. Apply edits **only** if one of these is true:
+Re-read CLAUDE.md and the relevant package README. Apply edits **only** if one of these is true:
 
 | Trigger | What to update |
 |---------|----------------|
-| New package installed (composer / npm) | Bump the "Stack" or "Dependencies" section in the relevant README |
-| New page / route / endpoint added | Update the folder map or routes table in the relevant README |
-| New convention adopted (e.g. naming pattern, file-organization rule) | Add a line under "Conventions" in CLAUDE.md |
-| A checklist item in the root README's "Status" section is now complete | Open root README only at this moment, tick the box, done |
-| Architecture changed (e.g. new service added to compose, new domain in DNS pattern) | Update CLAUDE.md + root README |
+| New package installed | Bump the "Stack" / "Dependencies" section of the relevant README |
+| New page / route / endpoint added | Update the folder map or routes section of the relevant README |
+| New convention adopted | Add a line under "Conventions" in CLAUDE.md |
+| Root README "Status" item now complete | Open root README, tick the box, close |
+| Architecture changed (new compose service, new domain pattern) | Update CLAUDE.md + root README |
 
-**Do not** record implementation details: function signatures, code logic, file line numbers, "we used pattern X because Y." Those belong in code comments or commit messages, not project docs.
+**Do not** record implementation details (function signatures, line numbers, code logic). Architecture and procedure only.
 
-Use the **Edit** tool for surgical changes. Don't rewrite whole sections.
-
-If nothing material changed, **skip this phase entirely** and say so in the report.
+If nothing material changed, skip this phase and say so.
 
 ---
 
 ## Phase 5 — Report
 
-End with a 3-section summary:
+End with:
 
 ```
-**Folder:** <which folder the work targeted>
-**Specialist:** <which subagent ran>
+**Folder:** <folder>
+**Task type:** <admin-panel | rest-api | n/a>
+**Specialist:** <subagent>
 
-**What changed:**
-- <1-line bullet per file/change>
+**Files changed:**
+- <path>: <one-line purpose>
+
+**Packages added:** <list, or "none">
+**New routes:** <list, or "none">
 
 **Docs updated:**
 - <file>: <one-line why> — or "No doc updates needed."
+
+**Next step for the user:**
+- Review the diff
+- Run the relevant command (e.g. `php artisan migrate:fresh --seed`, `npm install`, `npm run dev`) — listed below for convenience:
+  - <command 1>
+  - <command 2>
 ```
 
-Keep it short. The user has explicit preference for concise output.
+Keep it tight.
 
 ---
 
 ## Hard rules
 
-- **Read only the files in the table above for the specified folder.** Token budget matters — that's the entire reason this command takes an explicit folder argument.
-- **Never edit files outside the folder the specialist is scoped to**, unless the task explicitly spans folders.
-- **Never invent new conventions on the user's behalf** — if you discover that something needs a convention, flag it to the user instead of unilaterally adopting one.
-- **Never record code-level detail in CLAUDE.md or READMEs** — those files are for architectural and procedural facts only.
-- If the folder token is missing or unrecognized, **ask** before doing anything. Do not infer.
+- **Never run docker / php / composer / npm / artisan / Pest / PHPUnit commands.** The user runs these after reviewing code. You may use `git status` only.
+- **Never run the dev server, build commands, or migrations.** Just write code.
+- **Stay inside the specified folder** unless the task explicitly spans folders.
+- **Don't invent new conventions** — flag them to the user instead.
+- **Don't record code-level detail in CLAUDE.md or READMEs.**
+- If the folder or task-type is missing/unrecognized, **ask** via `AskUserQuestion`. Don't infer.
+- Read **only** the files in the Phase 1 list. Token budget matters.
