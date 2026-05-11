@@ -60,6 +60,7 @@ ecom/backend/
 │   │   ├── Dashboard.php              # Currently static, awaiting DB wiring
 │   │   ├── CategoryIndex.php          # DB-backed; list + inline create/edit/delete
 │   │   ├── ColorIndex.php             # DB-backed; list + inline create/edit/delete (title + hex code)
+│   │   ├── SizeIndex.php              # DB-backed; list + inline create/edit/delete
 │   │   ├── ProductIndex.php
 │   │   ├── ProductForm.php
 │   │   └── OrderIndex.php
