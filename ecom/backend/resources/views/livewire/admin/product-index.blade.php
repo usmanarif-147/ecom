@@ -1,3 +1,4 @@
+@use(App\Enums\ProductStatus)
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -13,14 +14,18 @@
         </a>
     </div>
 
+    @if (session()->has('message'))
+        <p class="text-sm text-green-700">{{ session('message') }}</p>
+    @endif
+
     <div class="flex flex-col sm:flex-row gap-3">
         <input type="text" wire:model.live.debounce.250ms="search" placeholder="Search by name…"
             class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
-        <select wire:model.live="category"
+        <select wire:model.live="categoryId"
             class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
             <option value="">All categories</option>
             @foreach ($categories as $cat)
-                <option value="{{ $cat }}">{{ $cat }}</option>
+                <option value="{{ $cat->id }}">{{ $cat->title }}</option>
             @endforeach
         </select>
     </div>
@@ -38,43 +43,40 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-                @forelse ($visibleProducts as $product)
+                @forelse ($products as $product)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3">
                             <div class="flex items-center">
-                                <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}"
-                                    class="w-10 h-10 rounded-md object-cover" />
-                                <span class="ml-3 font-medium text-gray-900">{{ $product['name'] }}</span>
+                                @if ($product->images->isEmpty())
+                                    <div class="w-10 h-10 rounded-md bg-gray-200"></div>
+                                @else
+                                    <img src="{{ $product->images->first()->url }}" alt="{{ $product->title }}"
+                                        class="w-10 h-10 rounded-md object-cover" />
+                                @endif
+                                <span class="ml-3 font-medium text-gray-900">{{ $product->title }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-gray-700">{{ $product['category'] }}</td>
-                        <td class="px-4 py-3 text-right text-gray-900">${{ number_format($product['price'], 2) }}</td>
-                        <td class="px-4 py-3 text-right text-gray-700">{{ $product['stock'] }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ $product->category?->title }}</td>
+                        <td class="px-4 py-3 text-right text-gray-900">${{ number_format($product->price, 2) }}</td>
+                        <td class="px-4 py-3 text-right text-gray-700">{{ $product->stock }}</td>
                         <td class="px-4 py-3">
-                            <span @class([
-                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                                'bg-green-100 text-green-800' => $product['status'] === 'active',
-                                'bg-gray-200 text-gray-700' => $product['status'] !== 'active',
-                            ])>
-                                {{ ucfirst($product['status']) }}
-                            </span>
+                            @if ($product->status === ProductStatus::Active)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Inactive</span>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-right space-x-3">
-                            <a href="{{ route('admin.products.edit', $product['id']) }}" class="text-gray-700 hover:text-gray-900 font-medium">
-                                Edit
-                            </a>
-                            <button type="button" wire:click="delete({{ $product['id'] }})"
+                            <a href="{{ route('admin.products.edit', $product->id) }}"
+                                class="text-gray-700 hover:text-gray-900 font-medium">Edit</a>
+                            <button type="button" wire:click="delete({{ $product->id }})"
                                 wire:confirm="Delete this product?"
-                                class="text-rose-600 hover:text-rose-700 font-medium">
-                                Delete
-                            </button>
+                                class="text-rose-600 hover:text-rose-700 font-medium">Delete</button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-10 text-center text-gray-500">
-                            No products match your filters.
-                        </td>
+                        <td colspan="6" class="px-4 py-10 text-center text-gray-500">No products match your filters.</td>
                     </tr>
                 @endforelse
             </tbody>

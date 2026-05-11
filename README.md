@@ -136,6 +136,6 @@ Local dev mirrors this via `/etc/hosts` once subdomain routing is wired up. Not 
 - [x] Static UI for storefront (4 pages), customer panel (3 pages + auth), admin (5 pages + auth)
 - [ ] Customer authentication (Sanctum tokens)
 - [ ] REST API endpoints
-- [ ] Wire admin Livewire CRUD to real DB (currently uses static data)
+- [x] Wire admin Livewire CRUD to real DB (Categories, Colors, Sizes, Products — Dashboard widgets and Orders list still static)
 - [ ] Subdomain routing locally
 - [ ] Deploy

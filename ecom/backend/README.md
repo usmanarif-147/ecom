@@ -61,9 +61,9 @@ ecom/backend/
 │   │   ├── CategoryIndex.php          # DB-backed; list + inline create/edit/delete
 │   │   ├── ColorIndex.php             # DB-backed; list + inline create/edit/delete (title + hex code)
 │   │   ├── SizeIndex.php              # DB-backed; list + inline create/edit/delete
-│   │   ├── ProductIndex.php
-│   │   ├── ProductForm.php
-│   │   └── OrderIndex.php
+│   │   ├── ProductIndex.php          # DB-backed; list + search + category filter + delete
+│   │   ├── ProductForm.php           # DB-backed; create/edit (incl. MinIO image uploads)
+│   │   └── OrderIndex.php            # Currently static, awaiting DB wiring
 │   └── Models/
 │       ├── User.php, Category.php, Product.php, Image.php,
 │       └── Order.php, OrderItem.php, Size.php, Color.php
