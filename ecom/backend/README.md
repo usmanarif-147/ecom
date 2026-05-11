@@ -1,58 +1,140 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ecom/backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 13 + Livewire 4. Hosts the admin panel (Livewire UI) and will host the REST API consumed by the storefront and customer-panel SPAs.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| | |
+|---|---|
+| PHP | 8.4 (php-fpm container) |
+| Framework | Laravel 13 |
+| UI for admin | Livewire 4 + Tailwind v4 + Blade |
+| Database | Postgres 16 (`pdo_pgsql`) |
+| Cache / queue | Redis (phpredis extension) |
+| Mail (dev) | MailHog at `mailhog:1025` |
+| Files | MinIO (S3-compatible) at `minio:9000` |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## How to run
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+All commands run from the **project root** (`project-two/`), not from this folder.
 
 ```bash
-composer require laravel/boost --dev
+# Start the whole stack
+docker compose up -d
 
-php artisan boost:install
+# Migrate + seed (creates the admin user)
+docker compose exec app php artisan migrate:fresh --seed
+
+# Build CSS/JS for the admin panel (Vite, one-off)
+docker run --rm -v $(pwd)/ecom/backend:/app -u 1000:1000 -w /app -e HOME=/tmp node:lts npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The Laravel container is named `dockerized-ecom`. Reach it on:
+- `http://localhost:8080/admin/login` (admin panel)
+- `http://localhost:8080/api/...` (future API)
 
-## Contributing
+### Why one-off `docker run` for `npm`?
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+The `node` service in `docker-compose.yml` mounts only `./ecom/frontend` (since that's where the SPAs live). To run npm/Vite in this Laravel folder, you need the one-off command shown above.
 
-## Code of Conduct
+## Admin login
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Seeded credentials (see `database/seeders/AdminLoginSeeder.php`):
+- email: `admin@gmail.com`
+- password: `11223344`
 
-## Security Vulnerabilities
+## Folder map
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+ecom/backend/
+├── app/
+│   ├── Data/AdminStaticData.php       # Hard-coded data for admin pages (will move to DB)
+│   ├── Enums/
+│   │   ├── OrderStatus.php            # int 0..3 → Pending/Shipped/Delivered/Cancelled
+│   │   └── ProductStatus.php          # int 0/1 → Inactive/Active
+│   ├── Http/Middleware/
+│   │   └── isAdmin.php                # Custom — handles "guest" and "admin" gates via :type param
+│   ├── Livewire/Admin/
+│   │   ├── Login.php                  # Used inside admin.login Blade view
+│   │   ├── Logout.php                 # Used in topbar + sidebar (variant prop)
+│   │   ├── Dashboard.php              # Currently static, awaiting DB wiring
+│   │   ├── ProductIndex.php
+│   │   ├── ProductForm.php
+│   │   └── OrderIndex.php
+│   └── Models/
+│       ├── User.php, Category.php, Product.php, Image.php,
+│       └── Order.php, OrderItem.php, Size.php, Color.php
+├── database/migrations/               # 5 schema migrations + 2 pivots
+├── database/seeders/AdminLoginSeeder.php
+├── resources/views/
+│   ├── components/layouts/
+│   │   ├── admin.blade.php            # Layout with sidebar + topbar
+│   │   └── auth.blade.php             # Centered card layout for /admin/login
+│   ├── partials/                      # admin-sidebar, admin-topbar
+│   ├── admin/                         # Page-level Blade views (Route::view targets)
+│   └── livewire/admin/                # Livewire component views
+└── routes/
+    ├── web.php                        # Just root + requires admin.php
+    └── admin.php                      # All /admin/* routes
+```
 
-## License
+## Routing convention
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Admin routes are in `routes/admin.php`, grouped under `Route::prefix('admin')->name('admin.')`.
+
+Pattern: **`Route::view('/foo', 'admin.foo')`** points at a Blade view that *embeds* small Livewire components via `@livewire('admin.bar')`. Full-page Livewire components (`Route::get('/foo', SomeComponent::class)`) are intentionally not used — middleware composition is easier with `Route::view`.
+
+| Middleware on routes | Meaning |
+|---|---|
+| `is_admin:guest` | Only logged-out users (or non-admins). Redirects logged-in admins to `/admin/dashboard`. |
+| `is_admin` | Only authenticated admins. Redirects others to `/admin/login`. |
+
+## Database conventions
+
+- Money: `decimal(10, 2)`, **never `float`**.
+- Status: `tinyInteger` cast to PHP enums via Eloquent `casts()`. See `App\Enums\OrderStatus` and `App\Enums\ProductStatus`.
+- `order_items.product` is a JSON snapshot of the product at the time of sale (immutable order history); `product_id` is a nullable FK for analytics.
+- Pivot tables: `color_product`, `product_size` (Laravel alphabetical convention).
+- Editing an existing migration requires `php artisan migrate:fresh --seed` to take effect — no incremental migration for early-stage schema changes.
+
+## Models — relations summary
+
+```
+Category   hasMany    Products
+Product    belongsTo  Category
+Product    hasMany    Images
+Product    belongsToMany  Sizes, Colors     (pivots: product_size, color_product)
+Image      belongsTo  Product
+Order      hasMany    OrderItems
+OrderItem  belongsTo  Order
+OrderItem  belongsTo  Product               (nullable; FK alongside JSON snapshot)
+```
+
+Note: `$orderItem->product` returns the **JSON snapshot** (not the related Product model) because of the `product` column on the row. Use `$orderItem->product()->first()` or eager-load to get the related Product.
+
+## Auth (admin)
+
+Vanilla Laravel session auth on the `web` guard.
+
+- `Auth::attempt([...], $remember)` in `Livewire/Admin/Login.php`
+- `Auth::guard('web')->logout()` + `session()->invalidate()` + `session()->regenerateToken()` in `Logout`
+- `isAdmin` middleware aliased as `is_admin` in `bootstrap/app.php`
+
+## Future API (not yet implemented)
+
+Will live under `/api/v1/...` using Laravel Sanctum bearer tokens. Three planned route groups:
+
+| Prefix | Middleware | Purpose |
+|--------|-----------|---------|
+| `/api/v1/public/*` | none | Browse products, register, login |
+| `/api/v1/customer/*` | `auth:sanctum` + role check | Cart, orders, profile |
+| `/api/v1/vendor/*` | `auth:sanctum` + role check | Vendor CRUD (vendor = admin in single-vendor MVP) |
+
+## Common artisan commands
+
+```bash
+docker compose exec app php artisan migrate:fresh --seed
+docker compose exec app php artisan tinker
+docker compose exec app php artisan route:list
+docker compose exec app composer require some/package
+```
