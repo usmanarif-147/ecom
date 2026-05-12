@@ -35,9 +35,9 @@ class ProductIndex extends Component
     public function render()
     {
         $products = Product::query()
-            ->with(['category:id,title', 'images' => fn ($q) => $q->orderBy('id')->limit(1)])
-            ->when($this->search !== '', fn ($q) => $q->where('title', 'like', '%' . $this->search . '%'))
-            ->when($this->categoryId !== null, fn ($q) => $q->where('category_id', $this->categoryId))
+            ->with(['category:id,title', 'images' => fn($q) => $q->orderBy('id')->limit(1)])
+            ->when($this->search !== '', fn($q) => $q->where('title', 'like', '%' . $this->search . '%'))
+            ->when($this->categoryId !== null, fn($q) => $q->where('category_id', $this->categoryId))
             ->orderBy('title')
             ->get();
 

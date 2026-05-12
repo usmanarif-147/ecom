@@ -25,7 +25,7 @@ class Image extends Model
             if (str_starts_with($this->path, 'images/')) {
                 return asset($this->path);
             }
-            return Storage::disk('s3')->temporaryUrl($this->path, now()->addHour());
+            return Storage::disk('s3-public')->temporaryUrl($this->path, now()->addHour());
         });
     }
 }
