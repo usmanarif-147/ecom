@@ -6,11 +6,24 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ProductIndex extends Component
 {
+    use WithPagination;
+
     public string $search = '';
     public ?int $categoryId = null;
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingCategoryId(): void
+    {
+        $this->resetPage();
+    }
 
     public function delete(int $id): void
     {
@@ -39,7 +52,7 @@ class ProductIndex extends Component
             ->when($this->search !== '', fn($q) => $q->where('title', 'like', '%' . $this->search . '%'))
             ->when($this->categoryId !== null, fn($q) => $q->where('category_id', $this->categoryId))
             ->orderBy('title')
-            ->get();
+            ->paginate(10);
 
         return view('livewire.admin.product-index', [
             'products'   => $products,
