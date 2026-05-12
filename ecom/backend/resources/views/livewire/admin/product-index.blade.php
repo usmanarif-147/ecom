@@ -5,6 +5,7 @@
             <h2 class="text-2xl font-semibold text-gray-900">Products</h2>
             <p class="text-sm text-gray-600 mt-1">Manage your store's catalog.</p>
         </div>
+        @livewire('admin.upload-csv')
         <a href="{{ route('admin.products.create') }}"
             class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800">
             <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -13,6 +14,8 @@
             Add Product
         </a>
     </div>
+
+    @livewire('admin.progress-report')
 
     @if (session()->has('message'))
         <p class="text-sm text-green-700">{{ session('message') }}</p>
@@ -35,6 +38,7 @@
             <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
                 <tr>
                     <th class="text-left px-4 py-3 font-medium">Product</th>
+                    <th> color and size </th>
                     <th class="text-left px-4 py-3 font-medium">Category</th>
                     <th class="text-right px-4 py-3 font-medium">Price</th>
                     <th class="text-right px-4 py-3 font-medium">Stock</th>
@@ -56,14 +60,24 @@
                                 <span class="ml-3 font-medium text-gray-900">{{ $product->title }}</span>
                             </div>
                         </td>
+                        <td>
+                            @foreach ($product->colors as $color)
+                                {{ $color->title }}
+                            @endforeach
+                            @foreach ($product->sizes as $size)
+                                {{ $size->title }}
+                            @endforeach
+                        </td>
                         <td class="px-4 py-3 text-gray-700">{{ $product->category?->title }}</td>
                         <td class="px-4 py-3 text-right text-gray-900">${{ number_format($product->price, 2) }}</td>
                         <td class="px-4 py-3 text-right text-gray-700">{{ $product->stock }}</td>
                         <td class="px-4 py-3">
                             @if ($product->status === ProductStatus::Active)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Inactive</span>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Inactive</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right space-x-3">
@@ -76,7 +90,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-10 text-center text-gray-500">No products match your filters.</td>
+                        <td colspan="6" class="px-4 py-10 text-center text-gray-500">No products match your filters.
+                        </td>
                     </tr>
                 @endforelse
             </tbody>

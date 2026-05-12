@@ -6,11 +6,12 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class ProductIndex extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public string $search = '';
     public ?int $categoryId = null;
@@ -47,11 +48,13 @@ class ProductIndex extends Component
 
     public function render()
     {
+        // dd(Product::with('sizes')->where('id', 2)->first());
         $products = Product::query()
             ->with(['category:id,title', 'images' => fn($q) => $q->orderBy('id')->limit(1)])
+            ->with(['colors', 'sizes'])
             ->when($this->search !== '', fn($q) => $q->where('title', 'like', '%' . $this->search . '%'))
             ->when($this->categoryId !== null, fn($q) => $q->where('category_id', $this->categoryId))
-            ->orderBy('title')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.admin.product-index', [

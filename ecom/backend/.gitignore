@@ -26,3 +26,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /public/images/seed-products
+/public/products-1000.csv
+/public/products-100000.csv

@@ -89,6 +89,7 @@ class ProductForm extends Component
                 ],
             );
 
+            // dd($this->sizeIds, $this->colorIds);
             $product->sizes()->sync($this->sizeIds);
             $product->colors()->sync($this->colorIds);
 
