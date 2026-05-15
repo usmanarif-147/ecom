@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Admin;
 
-use App\Enums\ProductStatus;
-use App\Models\Product;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use App\Enums\ProductImportStatus;
+use App\Jobs\SplitCsv;
+use App\Models\ImportJob;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -21,65 +21,28 @@ class UploadCsv extends Component
     public function import()
     {
         $this->validate([
-            'csv' => 'required|file|mimetypes:text/plain,text/csv,application/vnd.ms-excel',
+            'csv' => 'required|file|mimetypes:text/plain,text/csv,application/vnd.ms-excel|max:204800', // 50 MB
         ]);
 
-        $handle = fopen($this->csv->getRealPath(), 'r');
-        $header = fgetcsv($handle);                    // first row → column names
+        $uuid = (string) Str::uuid();
+        $key  = "imports/{$uuid}/source.csv";
 
-        // dd(fgetcsv($handle));
-        $rows = [];
-        while (($data = fgetcsv($handle)) !== false) {
-            $row = array_combine($header, $data);
-            $row['size']  = explode('|', $row['size']);    // ['1','3','5']
-            $row['color'] = explode('|', $row['color']);
-            $rows[] = $row;
-        }
-        fclose($handle);
+        $this->csv->storeAs("imports/{$uuid}", 'source.csv', 's3');
 
-        for ($i = 0; $i < count($rows); $i++) {
-            $this->saveProduct($rows[$i]);
-        }
+        $importJob = ImportJob::create([
+            'user_id'   => auth()->id(),
+            'file_path' => $key,
+            'status'    => ProductImportStatus::Queued,
+        ]);
 
+        SplitCsv::dispatch($importJob->id);
 
-        $this->counter++;
-        $this->dispatch('show-progress-bar', counter: $this->counter);
+        $this->reset('csv');
+        $this->dispatch('import-started', importJobId: $importJob->id);
+
+        session()->flash('message', 'Import queued. You can keep working — progress will appear below.');
     }
 
-    private function saveProduct($data)
-    {
-        // dd($product);
-        // $this->validate([
-        //     'category_id'   => 'required|integer|exists:categories,id',
-        //     'title'         => 'required|string|max:255',
-        //     'description'   => 'nullable|string|max:10000',
-        //     'price'         => 'required|numeric|min:0',
-        //     'cost'          => 'required|numeric|min:0',
-        //     'stock'         => 'required|integer|min:0',
-        //     'status'        => 'required|integer|in:0,1',
-        //     'sizeIds'       => 'array',
-        //     'sizeIds.*'     => 'integer|exists:sizes,id',
-        //     'colorIds'      => 'array',
-        //     'colorIds.*'    => 'integer|exists:colors,id',
-        //     'newImages'     => 'array|max:8',
-        //     'newImages.*'   => 'image|max:2048',
-        // ]);
-
-        $product = Product::create(
-            [
-                'category_id' => $data['category'],
-                'title'       => $data['title'],
-                'description' => $data['description'] !== '' ? $data['description'] : null,
-                'price'       => $data['price'],
-                'cost'        => $data['cost'],
-                'stock'       => $data['stock'],
-                'status'      => ProductStatus::from($data['status']),
-            ],
-        );
-
-        $product->sizes()->sync($data['size']);
-        $product->colors()->sync($data['color']);
-    }
 
     public function render()
     {
