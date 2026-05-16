@@ -13,7 +13,7 @@ class AdminBulkMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public string $subject,
+        public $subject,
         public string $body,
     ) {}
 
