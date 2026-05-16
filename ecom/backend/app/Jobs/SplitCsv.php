@@ -38,7 +38,6 @@ class SplitCsv implements ShouldQueue
 
     public function handle(): void
     {
-        dd('this is handle method');
         $importJob = ImportJob::findOrFail($this->importJobId);
 
         $importJob->update([
