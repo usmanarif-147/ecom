@@ -63,7 +63,10 @@ ecom/backend/
 │   │   ├── SizeIndex.php              # DB-backed; list + inline create/edit/delete
 │   │   ├── ProductIndex.php          # DB-backed; list + search + category filter + delete
 │   │   ├── ProductForm.php           # DB-backed; create/edit (incl. MinIO image uploads)
-│   │   └── OrderIndex.php            # Currently static, awaiting DB wiring
+│   │   ├── OrderIndex.php            # Currently static, awaiting DB wiring
+│   │   └── CustomerIndex.php         # Static dummy data; search/sort/paginate + bulk delete + bulk email
+│   ├── Mail/
+│   │   └── AdminBulkMail.php          # Mailable used by CustomerIndex for bulk emails (MailHog in dev)
 │   └── Models/
 │       ├── User.php, Category.php, Product.php, Image.php,
 │       └── Order.php, OrderItem.php, Size.php, Color.php

@@ -65,4 +65,21 @@ class AdminStaticData
         }
         return null;
     }
+
+    public static function customers(): array
+    {
+        $faker = \Faker\Factory::create();
+        $faker->seed(20260516);
+
+        $paymentMethods = ['Credit Card', 'PayPal', 'Stripe', 'Bank Transfer', 'Cash on Delivery'];
+
+        return collect(range(1, 100))->map(fn ($i) => [
+            'id'             => $i,
+            'name'           => $faker->name(),
+            'email'          => $faker->unique()->safeEmail(),
+            'address'        => $faker->streetAddress() . ', ' . $faker->city() . ', ' . $faker->stateAbbr() . ' ' . $faker->postcode(),
+            'orders_count'   => $faker->numberBetween(0, 50),
+            'payment_method' => $faker->randomElement($paymentMethods),
+        ])->all();
+    }
 }

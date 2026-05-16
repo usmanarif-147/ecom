@@ -16,7 +16,7 @@ Server-rendered Livewire pages under `/admin/*`. Session auth on the `web` guard
 | `/admin/colors` | Manage the master list of colors (title + hex code) |
 | `/admin/orders` | List all orders, filter by status (pending / shipped / delivered / cancelled) |
 | `/admin/orders/{id}` | View one order with item snapshots, customer info; update status |
-| `/admin/customers` | List registered customers; click into their order history |
+| `/admin/customers` | List customers with search, sort by orders, bulk delete + bulk email (static data for now) |
 | (logout button) | Sign out + invalidate session |
 
 ## What the admin can do

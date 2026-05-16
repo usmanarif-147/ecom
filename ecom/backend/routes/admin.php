@@ -12,6 +12,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::view('/colors', 'admin.colors.index')->name('colors.index');
         Route::view('/sizes', 'admin.sizes.index')->name('sizes.index');
         Route::view('/orders', 'admin.orders.index')->name('orders.index');
+        Route::view('/customers', 'admin.customers.index')->name('customers.index');
         Route::view('/products', 'admin.products.index')->name('products.index');
         Route::view('/products/create', 'admin.products.create')->name('products.create');
         Route::view('/products/{id}/edit', 'admin.products.edit')->name('products.edit');
