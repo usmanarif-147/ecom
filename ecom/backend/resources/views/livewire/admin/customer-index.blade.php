@@ -11,23 +11,15 @@
     @endif
 
     <div class="flex flex-col sm:flex-row gap-3">
-        <input type="text" wire:model.live.debounce.250ms="search" placeholder="Search name, email, or address…"
+        <input type="text" wire:model.live.debounce.250ms="search" placeholder="Search name, email, phone, or address…"
             class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
-        <select wire:model.live="sortDir"
-            class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
-            <option value="desc">Orders ↓</option>
-            <option value="asc">Orders ↑</option>
-        </select>
     </div>
 
-    @if (count($selected) > 0)
+    @if (count($selectedEmails) > 0)
         <div class="flex items-center gap-4 px-4 py-3 bg-gray-100 rounded-md text-sm">
             <span class="font-medium text-gray-700">
-                {{ count($selected) }} selected{{ $selectAll ? ' (all)' : '' }}
+                {{ count($selectedEmails) }} selected{{ $selectAll ? ' (all)' : '' }}
             </span>
-            <button type="button" wire:click="deleteSelected"
-                wire:confirm="Delete the selected customers? This cannot be undone."
-                class="text-rose-600 hover:text-rose-700 font-medium">Delete selected</button>
             <button type="button" wire:click="openEmailModal"
                 class="text-gray-700 hover:text-gray-900 font-medium">Send email</button>
         </div>
@@ -43,23 +35,23 @@
                     </th>
                     <th class="text-left px-4 py-3 font-medium">Name</th>
                     <th class="text-left px-4 py-3 font-medium">Email</th>
+                    <th class="text-left px-4 py-3 font-medium">Phone</th>
                     <th class="text-left px-4 py-3 font-medium">Address</th>
-                    <th class="text-right px-4 py-3 font-medium">Orders</th>
-                    <th class="text-left px-4 py-3 font-medium">Payment Method</th>
+                    <th class="text-right px-4 py-3 font-medium">Total Orders</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
                 @forelse ($customers as $customer)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3">
-                            <input type="checkbox" wire:model.live="selected" value="{{ $customer['id'] }}"
+                            <input type="checkbox" wire:model.live="selectedEmails" value="{{ $customer->customer_email }}"
                                 class="rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
                         </td>
-                        <td class="px-4 py-3 font-medium text-gray-900">{{ $customer['name'] }}</td>
-                        <td class="px-4 py-3 text-gray-700">{{ $customer['email'] }}</td>
-                        <td class="px-4 py-3 text-gray-700">{{ $customer['address'] }}</td>
-                        <td class="px-4 py-3 text-right text-gray-900">{{ $customer['orders_count'] }}</td>
-                        <td class="px-4 py-3 text-gray-700">{{ $customer['payment_method'] }}</td>
+                        <td class="px-4 py-3 font-medium text-gray-900">{{ $customer->customer_name }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ $customer->customer_email }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ $customer->customer_phone_number }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ $customer->customer_address }}</td>
+                        <td class="px-4 py-3 text-right text-gray-900">0</td>
                     </tr>
                 @empty
                     <tr>

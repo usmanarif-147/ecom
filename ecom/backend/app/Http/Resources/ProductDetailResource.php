@@ -16,9 +16,9 @@ class ProductDetailResource extends JsonResource
             'stock'       => $this->stock,
             'views'       => $this->views,
             'status'      => $this->status->name,
-            'category'    => $this->category?->title,
-            'sizes'       => $this->sizes->pluck('title'),
-            'colors'      => $this->colors->map(fn($c) => ['title' => $c->title, 'code' => $c->code]),
+            'category'    => $this->category ? ['id' => $this->category->id, 'title' => $this->category->title] : null,
+            'sizes'       => $this->sizes->map(fn($s) => ['id' => $s->id, 'title' => $s->title])->values(),
+            'colors'      => $this->colors->map(fn($c) => ['id' => $c->id, 'title' => $c->title, 'code' => $c->code])->values(),
             'images'      => $this->images->map(fn($i) => $i->url)->values(),
         ];
     }

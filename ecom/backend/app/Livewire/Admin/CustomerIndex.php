@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Admin;
 
-use App\Data\AdminStaticData;
+use App\Models\Order;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,10 +13,8 @@ class CustomerIndex extends Component
     use WithPagination;
 
     public string $search = '';
-    public string $sortDir = 'desc';
-    public array $selected = [];
+    public array $selectedEmails = [];
     public bool $selectAll = false;
-    public array $deletedIds = [];
     public bool $showEmailModal = false;
     public string $emailSubject = '';
     public string $emailBody = '';
@@ -25,38 +22,29 @@ class CustomerIndex extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
-        $this->selected = [];
         $this->selectAll = false;
-    }
-
-    public function updatingSortDir(): void
-    {
-        $this->resetPage();
+        $this->selectedEmails = [];
     }
 
     public function updatedSelectAll(bool $value): void
     {
-        $this->selected = $value ? $this->getAllFilteredIds() : [];
+        if ($value) {
+            $all = $this->getFilteredCustomers();
+            $this->selectedEmails = $all->pluck('customer_email')->values()->all();
+        } else {
+            $this->selectedEmails = [];
+        }
     }
 
-    public function updatedSelected(): void
+    public function updatedSelectedEmails(): void
     {
-        $filtered = $this->getAllFilteredIds();
-        $this->selectAll = count($filtered) > 0 && count($this->selected) === count($filtered);
-    }
-
-    public function deleteSelected(): void
-    {
-        $count = count($this->selected);
-        $this->deletedIds = array_unique(array_merge($this->deletedIds, $this->selected));
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('message', "{$count} customers deleted.");
+        $total = $this->getFilteredCustomers()->count();
+        $this->selectAll = $total > 0 && count($this->selectedEmails) === $total;
     }
 
     public function openEmailModal(): void
     {
-        if (empty($this->selected)) {
+        if (empty($this->selectedEmails)) {
             return;
         }
         $this->showEmailModal = true;
@@ -77,20 +65,15 @@ class CustomerIndex extends Component
             'emailBody'    => 'required',
         ]);
 
-        $all = collect(AdminStaticData::customers())->keyBy('id');
         $count = 0;
-
-        foreach ($this->selected as $id) {
-            $row = $all->get((int) $id);
-            if ($row) {
-                \Illuminate\Support\Facades\Mail::to($row['email'])
-                    ->send(new \App\Mail\AdminBulkMail($this->emailSubject, $this->emailBody));
-                $count++;
-            }
+        foreach ($this->selectedEmails as $email) {
+            \Illuminate\Support\Facades\Mail::to($email)
+                ->send(new \App\Mail\AdminBulkMail($this->emailSubject, $this->emailBody));
+            $count++;
         }
 
         session()->flash('message', "Email sent to {$count} customers.");
-        $this->selected = [];
+        $this->selectedEmails = [];
         $this->selectAll = false;
         $this->showEmailModal = false;
         $this->emailSubject = '';
@@ -99,53 +82,36 @@ class CustomerIndex extends Component
 
     public function render()
     {
-        $rows = collect(AdminStaticData::customers())
-            ->reject(fn ($c) => in_array($c['id'], $this->deletedIds));
-
-        if ($this->search !== '') {
-            $term = Str::lower($this->search);
-            $rows = $rows->filter(
-                fn ($c) => str_contains(Str::lower($c['name']), $term)
-                    || str_contains(Str::lower($c['email']), $term)
-                    || str_contains(Str::lower($c['address']), $term)
-            );
-        }
-
-        $rows = $this->sortDir === 'asc'
-            ? $rows->sortBy('orders_count')
-            : $rows->sortByDesc('orders_count');
+        $all = $this->getFilteredCustomers();
 
         $perPage = 10;
-        $currentPage = Paginator::resolveCurrentPage('page');
-        $items = $rows->values()->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $page = $this->getPage();
 
         $customers = new LengthAwarePaginator(
-            $items,
-            $rows->count(),
+            $all->forPage($page, $perPage)->values(),
+            $all->count(),
             $perPage,
-            $currentPage,
-            ['path' => Paginator::resolveCurrentPath(), 'pageName' => 'page']
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
         );
 
-        return view('livewire.admin.customer-index', [
-            'customers' => $customers,
-        ]);
+        return view('livewire.admin.customer-index', compact('customers'));
     }
 
-    private function getAllFilteredIds(): array
+    private function getFilteredCustomers()
     {
-        $rows = collect(AdminStaticData::customers())
-            ->reject(fn ($c) => in_array($c['id'], $this->deletedIds));
+        $all = Order::latest()->get()->unique('customer_email')->values();
 
-        if ($this->search !== '') {
-            $term = Str::lower($this->search);
-            $rows = $rows->filter(
-                fn ($c) => str_contains(Str::lower($c['name']), $term)
-                    || str_contains(Str::lower($c['email']), $term)
-                    || str_contains(Str::lower($c['address']), $term)
-            );
+        if ($this->search) {
+            $term = strtolower($this->search);
+            $all = $all->filter(fn ($o) =>
+                str_contains(strtolower($o->customer_name), $term) ||
+                str_contains(strtolower($o->customer_email), $term) ||
+                str_contains(strtolower($o->customer_phone_number ?? ''), $term) ||
+                str_contains(strtolower($o->customer_address), $term)
+            )->values();
         }
 
-        return $rows->pluck('id')->map(fn ($id) => (string) $id)->values()->all();
+        return $all;
     }
 }
