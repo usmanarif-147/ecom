@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('order_number');
             $table->string('customer_name');
             $table->string('customer_email');
-            $table->string('customer_phone_numer');
+            $table->string('customer_phone_number');
             $table->string('customer_address');
             $table->string('payment_method');
             $table->integer('number_of_items')->default(0);
