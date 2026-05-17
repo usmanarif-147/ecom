@@ -30,6 +30,8 @@ class ProductController extends Controller
             ->with(['category', 'sizes', 'colors', 'images' => fn($q) => $q->orderBy('id', 'asc')])
             ->findOrFail($id);
 
+        $product->increment('views');
+
         return new ProductDetailResource($product);
     }
 }
