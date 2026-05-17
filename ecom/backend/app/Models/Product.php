@@ -38,4 +38,33 @@ class Product extends Model
     {
         return $this->belongsToMany(Color::class, 'color_product', 'product_id', 'color_id');
     }
+
+    public function scopeActive($q)
+    {
+        return $q->where('status', ProductStatus::Active);
+    }
+
+    public function scopeSearchTitle($q, ?string $term)
+    {
+        if (!$term) return $q;
+        return $q->where('title', 'ilike', "%{$term}%");
+    }
+
+    public function scopeInCategory($q, ?int $id)
+    {
+        if (!$id) return $q;
+        return $q->where('category_id', $id);
+    }
+
+    public function scopeHasSize($q, ?int $id)
+    {
+        if (!$id) return $q;
+        return $q->whereHas('sizes', fn($s) => $s->where('sizes.id', $id));
+    }
+
+    public function scopeHasColor($q, ?int $id)
+    {
+        if (!$id) return $q;
+        return $q->whereHas('colors', fn($c) => $c->where('colors.id', $id));
+    }
 }
