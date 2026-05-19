@@ -34,10 +34,14 @@ To stop the dev server: `Ctrl+C` in its terminal, or `docker stop <container-nam
 
 ```
 ecom/frontend/store-front/
-├── nuxt.config.ts                  # Tailwind module registered here
+├── nuxt.config.ts                  # Tailwind module + runtimeConfig.public.apiBase
+├── .env.example                    # NUXT_PUBLIC_API_BASE
 ├── package.json                    # nuxt + @nuxtjs/tailwindcss + vue-router
 └── app/
     ├── app.vue                     # Just <NuxtLayout><NuxtPage/></NuxtLayout>
+    ├── composables/
+    │   └── useApi.js               # Returns a $fetch instance with baseURL + Accept: application/json
+    ├── types/api.js                # JSDoc typedefs for Product / Category / Size / Color / Order / PlaceOrderRequest
     ├── data/products.js            # Static product data (will move to API calls)
     ├── layouts/default.vue         # Header + footer wrapper
     ├── components/
@@ -58,16 +62,17 @@ Nuxt 4 uses the `app/` directory layout (instead of root-level `pages/`, `compon
 
 Static UI only — no API calls, no auth, no cart persistence. Hard-coded products in `app/data/products.js`. Buttons (Add to Cart, Place Order, qty steppers) are visual placeholders.
 
-## Future wiring
+## API wiring (v1: guest checkout, no auth)
 
-When the Laravel API is ready, this app will:
-- Fetch product list from `GET /api/v1/public/products`
-- Fetch single product from `GET /api/v1/public/products/:id`
-- POST orders to `POST /api/v1/customer/orders` (after customer login)
-- Use a Sanctum bearer token for customer-scoped calls
-- Token lives in `localStorage`, set via `Authorization: Bearer <token>` header on requests
+The Laravel API is now live at `/api/v1/public/*`. v1 is **guest-only** — no customer accounts, no Sanctum, no tokens. The storefront will:
 
-Sign-in/register links route to `http://localhost:5173/login` (customer panel) — that's where auth forms live, not here.
+- Fetch product list from `GET /api/v1/public/products` (search, category/size/color filters, price sort, paginated 12/page)
+- Fetch single product from `GET /api/v1/public/products/{id}` (auto-increments view counter)
+- Fetch filter options from `GET /api/v1/public/categories`, `/sizes`, `/colors`
+- Hold the cart **client-side** (localStorage; Pinia store, planned)
+- Place orders via `POST /api/v1/public/place-order` with customer details + cart payload + `payment_method: "cod"` (Stripe deferred)
+
+All requests go through the `useApi()` composable in `app/composables/`, which reads `NUXT_PUBLIC_API_BASE` from the environment.
 
 ## Production target
 
